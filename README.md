@@ -49,6 +49,35 @@ The program follows a modular pipeline architecture where `main(void)` seeds the
 
 ---
 
+## Design Logic & Why the Code Is Structured This Way
+
+The textbook prompt (Problem 44) asks for **"a function for each of the following processes"** (`a` through `i`) on top of an array builder. To satisfy the book's rules cleanly in standard C without global variables, the program is organized into **4 functional buckets**:
+
+### 1. Why `printArray(int arr[], int size)` Takes a Dynamic `size` Parameter (Process `a`, `h`, and `i`)
+- **The Book's Requirement:** Process `a` prints the 100-element array 10 values to a line in aligned rows, and Processes `h` and `i` explicitly state: *"Then use process 'a' above to print the new array."*
+- **The Design Choice:** Instead of hardcoding `100` inside `printArray`, we pass `int size` as a parameter.
+  - When `main()` calls `printArray(numbers, SIZE)` for Process `a`, it prints all `100` elements (`10` full rows of `10`).
+  - When `copyPositiveValues()` and `copyNegativeValues()` finish filtering, the new arrays only hold `posCount` (e.g., `60`) and `negCount` (e.g., `40`) elements. Passing `posCount` and `negCount` directly into `printArray(posArr, posCount)` and `printArray(negArr, negCount)` reuses Process `a` directly without printing garbage uninitialized slots.
+- **Row Alignment (`%6d`):** Because values range from `-999` (4 characters including the minus sign) to `999` (3 characters), `%6d` right-aligns every number inside a fixed 6-character column so negative signs never push adjacent columns out of alignment.
+- **Line-Wrap Guard (`(i + 1) % 10 == 0` and `size % 10 != 0`):** Every 10th printed item triggers a newline (`\n`). If a filtered subarray in `h` or `i` has a length not divisible by 10 (such as 57 elements), the trailing `if (size % 10 != 0) printf("\n");` ensures the final partial row still ends cleanly with a newline.
+
+### 2. Why `buildArray` Negates Multiples of 3 or 7 Before Storing
+- **The Book's Requirement:** *"In building the array, if the random number is evenly divided by 3 or 7, store it as a negative number."*
+- **The Design Choice:**
+  - `rand() % 999` produces `0 ... 998`, so `(rand() % 999) + 1` shifts the range to strictly `1 ... 999` (guaranteeing `0` never appears, so every number is strictly positive or strictly negative).
+  - Checking `if (randomVal % 3 == 0 || randomVal % 7 == 0)` tests divisibility by 3 or 7 using the modulo operator (`%`). When true, `randomVal = -randomVal;` flips the sign in-place before writing `arr[i] = randomVal;`.
+
+### 3. Why Value Filtering (`b`) Uses a Separate `count` Counter While Index Filtering (`c`) Steps by `i += 2`
+- **Process `b` (`printOddValues`):** We do not know ahead of time which indices hold odd values. If we used the loop index `i` to decide when to print a newline, lines would break irregularly. Instead, we keep a dedicated `count` variable that only increments when an odd number (`arr[i] % 2 != 0`) is printed, wrapping the line strictly whenever `count % 10 == 0`. (In C, using `!= 0` instead of `== 1` is essential because negative odd numbers like `-511 % 2` evaluate to `-1`.)
+- **Process `c` (`printOddIndexValues`):** The book asks for *"the values at the odd numbered index locations"* (`1, 3, 5, ..., 99`). Starting the loop at `i = 1` and stepping by `i += 2` visits only the 50 odd indices directly in $O(N/2)$ steps without needing an `if` check inside the loop.
+
+### 4. Why Processes `d` Through `g` Return `int` Values Back to `main()`
+- **The Book's Wording:** Notice how `a`, `b`, and `c` say **"Print..."** (`void` functions), whereas `d`, `e`, `f`, and `g` explicitly say **"Return..."** (`int` functions):
+  - **Process `d` (`countEvenValues`) & Process `e` (`sumArrayValues`):** Use a single accumulator (`count` or `sum` initialized to `0`) and return the final integer to `main()`.
+  - **Process `f` (`findSmallestLocation`) & Process `g` (`findLargestLocation`):** The book asks for the **location** (the array index `0 ... 99`), not just the value itself. We initialize `minIndex = 0` (or `maxIndex = 0`), start comparing from `i = 1`, and update the saved index whenever `arr[i] < arr[minIndex]` (or `arr[i] > arr[maxIndex]`). Returning the index lets `main()` display both the exact index location (`smallestIndex`) and the value stored there (`numbers[smallestIndex]`).
+
+---
+
 ## Mathematical & Algorithmic Formulation
 
 ### 1. Scaled Random Generation & Divisibility Rule
