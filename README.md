@@ -78,6 +78,24 @@ The textbook prompt (Problem 44) asks for **"a function for each of the followin
 
 ---
 
+## Function-by-Function Gauntlet Q&A (Live Defense Walkthrough)
+
+This section captures the exact conceptual questions and live-modification answers from our function-by-function review gauntlet:
+
+| Stage / Function | Core Question | Clear Answer & Visual Mechanism |
+| :--- | :--- | :--- |
+| **`buildArray`: Why `+ 1`?** | Why write `(rand() % 999) + 1` instead of `rand() % 999`? | Just like a C array of size `999`, C starts counting remainders at `0` (`0 ... 998`). Adding `+ 1` bumps every number up by one step so the range becomes `1 ... 999`. |
+| **`buildArray`: `= -` vs `-=`** | How does `randomVal = -randomVal;` make a number negative instead of `0`? | `randomVal -= randomVal;` subtracts a number from itself (`9 - 9 = 0`). `randomVal = -randomVal;` puts the unary minus sign on the right side (`-(9)`), flipping `9` into `-9`. |
+| **`buildArray`: `\|\|` vs `&&`** | What if a number should flip negative only when divisible by **both** 3 **and** 7? | Change `\|\|` (OR, either lock opens the door) to `&&` (AND, both locks must open at once: `if (randomVal % 3 == 0 && randomVal % 7 == 0)`). |
+| **Letter `a` (`printArray`): Why `i + 1`?** | Why check `(i + 1) % 10 == 0` instead of `i % 10 == 0`? | Because `i` starts at index `0`! Without `+ 1`, `0 % 10 == 0` would fire immediately after the very first number. Also remember row length lives in **two** places: `(i + 1) % 10 == 0` and `size % 10 != 0`. |
+| **Letter `b` (`printOddValues`): Why `!= 0`?** | Why write `arr[i] % 2 != 0` instead of `arr[i] % 2 == 1`? | In C, a negative odd number like `-7 % 2` gives **`-1`**, not `+1`. Checking `!= 0` catches both positive odds (`+1`) and negative odds (`-1`). |
+| **Letter `c` (`printOddIndexValues`): No `if`?** | Why does Letter `c` have no `if` statement to check for odd numbers? | Letter `b` filters by **value** (`arr[i]`), whereas Letter `c` filters by **index position** (`i`). Starting at `i = 1` and stepping by `i += 2` automatically visits only odd slots (`1, 3, 5...`). |
+| **Letter `d` & `e`: Why `int` and `= 0`?** | Why do `countEvenValues` and `sumArrayValues` return `int` and initialize `= 0`? | "Return" means handing an `int` back to `main()`. Forgetting `sum = 0;` leaves `sum` holding leftover memory garbage and adds your array onto that garbage. |
+| **Letter `f` & `g`: Why `i = 1` and `<` vs `<=`?** | Why start the loop at `i = 1`, and how do `<` and `<=` handle ties? | `minIndex = 0;` already makes Box `0` the reigning champion, so starting at `i = 0` would just compare Box `0` against itself. Strict `<` (or `>`) keeps the **first** tied index; `<=` (or `>=`) lets later ties take over and returns the **last** tied index. To return the value instead of the index, return `arr[minIndex]`. |
+| **Letter `h` & `i`: Why `posCount` instead of `i`?** | Why write `posArr[posCount] = arr[i];` instead of `posArr[i] = arr[i];`? | `i` steps across all 100 boxes, while `posCount` only steps forward when a positive number is copied. Using `i` on both sides would leave uninitialized **garbage holes** in `posArr` everywhere a negative number was skipped! |
+
+---
+
 ## Mathematical & Algorithmic Formulation
 
 ### 1. Scaled Random Generation & Divisibility Rule
